@@ -1,1 +1,174 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Slot Machine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        #slot-machine {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .reel {
+            font-size: 60px;
+            width: 80px;
+            height: 80px;
+            background: #222;
+            border: 3px solid #555;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+        button {
+            padding: 10px 25px;
+            font-size: 18px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #info {
+            font-size: 1.1em;
+            margin-top: 15px;
+        }
+        @media (max-width: 500px) {
+            .reel {
+                font-size: 40px;
+                width: 60px;
+                height: 60px;
+            }
+            button {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>🎰 Super Slot Machine</h1>
+
+<div id="slot-machine">
+    <div class="reel" id="reel1">❓</div>
+    <div class="reel" id="reel2">❓</div>
+    <div class="reel" id="reel3">❓</div>
+</div>
+
+<button onclick="spin()">Spin (10 coins)</button>
+
+<div id="info">
+    <div id="balance">💰 Balance: 0</div>
+    <div id="jackpot">🎯 Jackpot: 0</div>
+    <div id="highscore">🏆 High Score: 0</div>
+    <div id="streak">🔥 Streak: 0</div>
+    <div id="result"></div>
+</div>
+
+<!-- Sounds -->
+<audio id="spin-sound" src="https://freesound.org/data/previews/341/341695_3248244-lq.mp3"></audio>
+<audio id="win-sound" src="https://freesound.org/data/previews/320/320655_5260877-lq.mp3"></audio>
+
+<script>
+    const symbols = ['🍒', '🍋', '🔔', '💎', '7️⃣'];
+    let bet = 10;
+    let balance = 0;
+    let jackpot = 0;
+    let highScore = 0;
+    let streak = 0;
+
+    // Load saved data
+    function loadGame() {
+        balance = parseInt(localStorage.getItem("balance")) || 100;
+        jackpot = parseInt(localStorage.getItem("jackpot")) || 50;
+        highScore = parseInt(localStorage.getItem("highScore")) || 100;
+        streak = parseInt(localStorage.getItem("streak")) || 0;
+        updateUI();
+    }
+
+    function saveGame() {
+        localStorage.setItem("balance", balance);
+        localStorage.setItem("jackpot", jackpot);
+        localStorage.setItem("highScore", highScore);
+        localStorage.setItem("streak", streak);
+    }
+
+    function getRandomSymbol() {
+        return symbols[Math.floor(Math.random() * symbols.length)];
+    }
+
+    function updateUI() {
+        document.getElementById("balance").textContent = `💰 Balance: ${balance}`;
+        document.getElementById("jackpot").textContent = `🎯 Jackpot: ${jackpot}`;
+        document.getElementById("highscore").textContent = `🏆 High Score: ${highScore}`;
+        document.getElementById("streak").textContent = `🔥 Streak: ${streak}`;
+    }
+
+    function spin() {
+        if (balance < bet) {
+            document.getElementById("result").textContent = "❌ Not enough coins!";
+            return;
+        }
+
+        balance -= bet;
+        jackpot += 2;
+        document.getElementById("spin-sound").play();
+
+        const r1 = getRandomSymbol();
+        const r2 = getRandomSymbol();
+        const r3 = getRandomSymbol();
+
+        const reels = [r1, r2, r3];
+        ["reel1", "reel2", "reel3"].forEach((id, i) => {
+            const el = document.getElementById(id);
+            el.style.transform = "scale(1.2)";
+            setTimeout(() => {
+                el.textContent = reels[i];
+                el.style.transform = "scale(1)";
+            }, 150 * i);
+        });
+
+        setTimeout(() => {
+            let payout = 0;
+            let message = "🙁 No match!";
+            if (r1 === r2 && r2 === r3) {
+                switch (r1) {
+                    case '7️⃣': payout = jackpot; message = `💸 JACKPOT! You won ${payout} coins!`; jackpot = 50; break;
+                    case '💎': payout = 50; message = `💎 Nice! +${payout}`; break;
+                    default: payout = 20; message = `✅ Win! +${payout}`;
+                }
+                document.getElementById("win-sound").play();
+                balance += payout;
+                streak += 1;
+                if (balance > highScore) highScore = balance;
+            } else {
+                streak = 0;
+            }
+
+            document.getElementById("result").textContent = message;
+            updateUI();
+            saveGame();
+        }, 600);
+    }
+
+    loadGame();
+</script>
+
+</body>
+</html>
+
